@@ -1,108 +1,216 @@
-/* Noa Hadad 305134694 */
-
+/**
+ *Cpp file of class  Player
+ *Author Alexey Titov
+ *Version 3.0
+ *Date 10.2018
+**/
+//library
 #include "Player.h"
-
-#include "Game.h"	//solution to the problem
-
-Player::Player(char* name, int num_of_cards):num_of_cards(num_of_cards){
-	this->name = new char[strlen(name) + 1];
-	//GCC (or rather, glibc) does not support strcpy_s() and friends
-	//strcpy_s(this->name, strlen(name) + 1, name);
-	strncpy(this->name, name, strlen(name) + 1);
-	for (int i=0;i<num_of_cards;i++)
-	    cards.push_back(generate_card());
+//Destructor
+Player::~Player(){
+    cards.clear();
 }
-
-Player::Player(const Player& other) {
-	num_of_cards = other.num_of_cards;
-	delete name;
-	name = new char[strlen(other.name) + 1];
-	//GCC (or rather, glibc) does not support strcpy_s() and friends
-	//strcpy_s(this->name, strlen(other.name) + 1, other.name);
-	strncpy(this->name, other.name, strlen(other.name) + 1);
-
-	cards.clear();
-	vector<Card>::const_iterator iter = (other.cards).begin();
-	for (int i = 0; i < other.num_of_cards; i++) {
-		cards.push_back(*iter);
-		iter++;
-	}
+//Empty constructor
+Player::Player(){
+    name="Default";			
+	num_of_cards=0;		
 }
-
-const Player& Player::operator=(const Player& other) {
-	num_of_cards = other.num_of_cards;
-	delete name;
-	name = new char[strlen(other.name) + 1];
-	//GCC (or rather, glibc) does not support strcpy_s() and friends
-	//strcpy_s(this->name, strlen(other.name) + 1, other.name);
-	strncpy(this->name, other.name, strlen(other.name) + 1);
-	
-	cards.clear();
-	vector<Card>::const_iterator iter = (other.cards).begin();
-	for (int i = 0; i < other.num_of_cards; i++) {
-		cards.push_back(*iter);
-		iter++;
-	}
-	return *this;
+//Constructor 1
+Player::Player(string _name, int _num_of_cards){
+    name=_name;			
+	num_of_cards=_num_of_cards;
+    while(_num_of_cards){
+        cards.push_back(generate_card());
+        _num_of_cards--;
+    }
 }
-
-char* Player::getName() const {
-	return name;
+//Constructor 2
+Player::Player(char* _name, int _num_of_cards){
+    name=std::string(_name);			
+	num_of_cards=_num_of_cards;
+    while(_num_of_cards){
+        cards.push_back(generate_card());
+        _num_of_cards--;
+    }
 }
-
-int Player::getNumOfCards() const {
-	return num_of_cards;
+//Copy constructor 
+Player::Player(const Player& p){
+    name=p.name;			
+	num_of_cards=p.num_of_cards;
+    cards.insert(cards.begin(), p.cards.begin(), p.cards.end());  
 }
-
- const vector<Card>& Player::getCards() const{
-	return cards;
+//Overloading for '=' operator for player type!
+const Player& Player::operator=(const Player& other){
+    name=other.name;			
+	num_of_cards=other.num_of_cards;
+    cards.clear();
+    cards.insert(cards.begin(), other.cards.begin(), other.cards.end());
+    return *this;
 }
-
-
-bool Player::play(Card& current) {
-	bool flag = true;
-	do {
-		int choice;
-		cin >> choice;
-		Game *game = Game::getInstance();
-		if (choice <= 0 || choice > num_of_cards) {
-			if ((*game).getDirection() == 0) (*game).turnPlus(1);
-			else (*game).turnPlus(-1);
-			cards.push_back(generate_card());
-			num_of_cards++;
-			return false;
-		}
-		vector<Card>::iterator itr_cards = cards.begin();
-		for (int i = 1; i < choice; i++) itr_cards++;
-		if ((*itr_cards).is_leggal(current)) {
-			Card card = *itr_cards;
-			cards.erase(itr_cards);
-			num_of_cards--;
-			if ((*game).getDirection() == 0) {
-				if (card.get_sign() == STOP) { (*game).turnPlus(2); }
-				else if (card.get_sign() == CD) { (*game).turnPlus(-1); (*game).changeDirection(); }
-				else if (card.get_sign() != PLUS) { (*game).turnPlus(1); }
-			}
-			else {
-				if (card.get_sign() == STOP) { (*game).turnPlus(-2); }
-				else if (card.get_sign() == CD) { (*game).turnPlus(1); (*game).changeDirection(); }
-				else if (card.get_sign() != PLUS) { (*game).turnPlus(-1); }
-			}
-			(*game).setCurrent(card);
-			return true;
-		}
-		else {
-			cout << "you can't put " << current << " on " << (*itr_cards) << endl;
-		}
-	} while (flag);
-	return false;
+//The function prints cards that the player has
+void Player::your_Turn(){
+    cout<<name<<", your turn -"<<endl;
+    cout<<"Your cards:";
+    for(int i=0; i!=num_of_cards; ++i)
+        cout<<" ("<<i+1<<")"<<cards.at(i);
+    cout<<endl;
 }
-
-bool Player::victory() const{
-	return (num_of_cards == 0);
+//The function return name of player
+string Player::getName(){
+    return name;
 }
-
-Player::~Player() {
-	delete name;
-	cards.clear();
+//The function allows the player to lay out additional cards 
+int Player::taki_card(Card& currentCard){
+    int n=0;
+    bool flag=true;
+    while(flag){
+        cin>>n;
+        if (n<=0 || n>num_of_cards){                    //next turn
+            n=3;
+            if (currentCard.get_sign()==10){            //plus card
+                cards.push_back(generate_card());
+                num_of_cards++;
+            }else
+                if (currentCard.get_sign()==11)         //stop card
+                    n=4;
+                else
+                  if (currentCard.get_sign()==12)       //CD card
+                    n=2;  
+            flag=false;
+        }else{
+            if (!cards.at(n-1).is_leggal(currentCard))  //card is illegal
+                cout<<"You can't put "<<cards.at(n-1)<<" on "<<currentCard<<endl;
+            else{
+                //new color, stop taki action
+                if (currentCard.get_color()!=cards.at(n-1).get_color() && cards.at(n-1).get_sign()!=13){
+                    currentCard=cards.at(n-1);
+                    cards.erase(cards.begin() + (n-1));
+                    --num_of_cards;
+                    n=3;
+                    flag=false;
+                }else{      //taki action
+                    currentCard=cards.at(n-1);
+                    cards.erase(cards.begin() + (n-1));
+                    --num_of_cards;
+                    if (currentCard.get_sign()==13){
+                        if (num_of_cards==0)
+                            n=1;
+                        else{
+                            cout<<"current: "<<currentCard<<endl;
+                            your_Turn();
+                            n=taki_card(currentCard);
+                        }
+		                flag=false;
+                    }
+                }
+            }
+        }
+    }
+    if (num_of_cards==0)            //win
+        n=1;
+    return n;
+}
+//The function returns option for game
+int Player::choice(Card& currentCard){
+    int n=0;
+    bool flag=true;
+    while(flag){
+        cin>>n;
+        if (n<=0 || n>num_of_cards){                    //take a card from the deck
+            cards.push_back(generate_card());
+            num_of_cards++;
+            n=3;
+            flag=false;
+        }else{
+            if (!cards.at(n-1).is_leggal(currentCard))  //card is illegal
+                cout<<"You can't put "<<cards.at(n-1)<<" on "<<currentCard<<endl;
+            else{
+                currentCard=cards.at(n-1);
+                cards.erase(cards.begin() + (n-1));
+                --num_of_cards;
+                switch (currentCard.get_sign()){
+	                //plus, the player must put one more card
+                    case PLUS:
+                        if (num_of_cards==0)
+                            flag=false;
+                        else{
+                            cout<<"current: "<<currentCard<<endl;
+                            your_Turn();
+                        }
+		                break;
+                    //stop, the next player misses the turn
+                    case STOP:
+		                n=4;
+                        flag=false;
+		                break;
+	                //changing the direction of the game
+                    case CD:
+		                n=2;
+                        flag=false;
+		                break;
+	                //TAKI, it is possible to lay out additional cards
+                    case TAKI:
+                        if (num_of_cards==0)
+                            n=1;
+                        else{
+                            cout<<"current: "<<currentCard<<endl;
+                            your_Turn();
+                            n=taki_card(currentCard);
+                        }
+		                flag=false;
+		                break;
+                    //next turn
+	                default:
+                        n=3;
+                        flag=false;
+	            }
+            }
+        }
+    }
+    if (num_of_cards==0)        //win
+        n=1;
+    return n;
+}
+//The function is responsible for the turn of the game, 
+//returns true if the player threw a card and false if the player took a card
+bool Player::play(Card& currentCard){
+    int n=0;
+    bool flag=true, _play=true;
+    while(flag){
+        cin>>n;
+        if (n<=0 || n>num_of_cards){                    //take a card from the deck
+            cards.push_back(generate_card());
+            num_of_cards++;
+            n=3;
+            flag=false;
+            _play=false;
+        }else{
+            if (!cards.at(n-1).is_leggal(currentCard))  //card is illegal
+                cout<<"You can't put "<<cards.at(n-1)<<" on "<<currentCard<<endl;
+            else{
+                currentCard=cards.at(n-1);
+                cards.erase(cards.begin() + (n-1));
+                --num_of_cards;
+                switch (currentCard.get_sign()){
+	                //plus, the player must put one more card
+                    case PLUS:
+                        if (num_of_cards==0)
+                            flag=false;
+                        else{
+                            cout<<"current: "<<currentCard<<endl;
+                            your_Turn();
+                        }
+		                break;
+                    //next turn
+	                default:
+                        flag=false;
+                }
+            }
+        }
+    }
+    return _play;
+}
+//The function return size of cards
+int Player::GetCards(){
+    return num_of_cards;
 }
