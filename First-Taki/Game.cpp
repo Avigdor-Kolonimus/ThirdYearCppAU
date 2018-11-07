@@ -10,10 +10,7 @@
 const string str1 = "How many players?";  
 const string str2 = "How many cards?";
 //Empty constructor
-Game::Game(){
-    num_cards=0;
-	num_players=0;    
-}
+Game::Game():num_cards(0),num_players(0){}
 //Constructor
 Game::Game(int _num_cards, int _num_players){
     num_cards=_num_cards;
@@ -38,56 +35,46 @@ Game::~Game(){
     players.clear();
 }
 //The function returns the number of cards
-int Game::num_Cards(){
-    int n;
-    cout <<str2<<endl;
-    cin>>n;
-    if(n<1)
-        return 0;
-    return n;
+void Game::num_Cards(){
+    cout << str2 << endl;
+    cin>>num_cards;
+    if(num_cards<1)
+        num_cards=0;
 }
 //The function returns the number of players
-int Game::num_Players(){
-    int n;
-    cout <<str1<<endl;
-    cin>>n;
-    if(n<1)
-        return 0;
-    return n;
+void Game::num_Players(){
+    cout << str1 << endl;
+    cin>>num_players;
+    if(num_players<1)
+        num_players=0;
 }
 //The function returns the name of the player
-string Game::name_Player(int i){
+string Game::name_Player(int i)const{
     string name;
     cout<<"player number "<<i<<" name?"<<endl;
     cin>>name;
     return name;
 }
 //The function retruns index of player
-int Game::index_Player(int index, int course){
-    if (course==1)
-        index=(index+course)%num_players;
-    else{
-        index+=course;
-        if (index==-1)
-            index=num_players-1;
-    }
+int Game::index_Player(int index, int course) const{
+    index=(index+course)%num_players;
     return index;   
 }
 //The function does not use Player::play(Card&)
 void Game::NoUsePlayStart(){
-    bool flag=true;                 //flag to end the game
+    bool flag=false;                //flag to end the game
     int course=1;                   //direction, 1 - clockwise; -1 - counterclock-wise
     int index=0;                    //index of player
     int option=0;                   //option according to the cards
-    num_players=num_Players();
-    if (!num_players)
-        flag=false;
-    num_cards=num_Cards();
-    if (!num_cards)
-        flag=false;
+    //initialization number of players and cards
+    num_Players();
+    num_Cards();
     //initialization players
-    for(int i=0; i!=num_players;++i)
-        players.push_back(Player(name_Player(i+1),num_cards));
+    if (num_players && num_cards){
+        for(int i=0; i!=num_players;++i)
+            players.push_back(Player(name_Player(i+1),num_cards));
+        flag=true;
+    }
     Card FirstCard(generate_card());
     while(flag){
         cout<<"current: "<<FirstCard<<endl;
@@ -119,45 +106,45 @@ void Game::UsePlayStart(){
     bool flag=true;                 //flag to end the game
     int course=1;                   //direction, 1 - clockwise; -1 - counterclock-wise
     int index=0;                    //index of player
-    int option=0;                   //option according to the cards
     bool _play=true;
-    num_players=num_Players();
-    if (!num_players)
-        flag=false;
-    num_cards=num_Cards();
-    if (!num_cards)
-        flag=false;
+    //initialization number of players and cards
+    num_Players();
+    num_Cards();
     //initialization players
-    for(int i=0; i!=num_players;++i)
-        players.push_back(Player(name_Player(i+1),num_cards));
+    if (num_players && num_cards){
+        for(int i=0; i!=num_players;++i)
+            players.push_back(Player(name_Player(i+1),num_cards));
+        flag=true;
+    }
     Card FirstCard(generate_card());
     while(flag){
         cout<<"current: "<<FirstCard<<endl;
         players.at(index).your_Turn();
         _play=players.at(index).play(FirstCard);
-        if (_play){
-            if (players.at(index).GetCards()==0){
+        if (_play){                                         //the player threw the card
+            if (players.at(index).getCards()==0){           //the player has not cards
                 flag=false;
                 cout<<players.at(index).getName()<<" wins!";
-            }else{
-                if(FirstCard.get_sign()==CD){
-                    course*=-1;
-                    index=index_Player(index, course);
-                }else{
-                    if (FirstCard.get_sign()== STOP){
+            }else{                                          //the player has several cards
+                switch(FirstCard.get_sign()){
+                    case CD:                                //changing the direction of the game
+                        course*=-1;
+                        index=index_Player(index, course);
+                        break;
+                    case STOP:                              //stop, the next player misses the turn
                         index=index_Player(index, course);
                         index=index_Player(index, course);
-                    }else
-                      index=index_Player(index, course);   
+                        break;
+                    default:                                //number and taki, the turn of the next player
+                        index=index_Player(index, course);  
                 }
             }
-        }else{
+        }else                                               //the player took the card
            index=index_Player(index, course); 
-        }
     }
 }
 //The function creates a game
 void Game::start(){
-    //NoUsePlayStart();
+    //NoUsePlayStart();     //use TAKI and PLUS
     UsePlayStart();
 }

@@ -6,15 +6,14 @@
 **/
 //library
 #include "Player.h"
+//define
+const string str3 = ", your turn -\nYour cards:";  
 //Destructor
 Player::~Player(){
     cards.clear();
 }
 //Empty constructor
-Player::Player(){
-    name="Default";			
-	num_of_cards=0;		
-}
+Player::Player():name("Default"),num_of_cards(0){}
 //Constructor 1
 Player::Player(string _name, int _num_of_cards){
     name=_name;			
@@ -26,7 +25,7 @@ Player::Player(string _name, int _num_of_cards){
 }
 //Constructor 2
 Player::Player(char* _name, int _num_of_cards){
-    name=std::string(_name);			
+    name=string(_name);			
 	num_of_cards=_num_of_cards;
     while(_num_of_cards){
         cards.push_back(generate_card());
@@ -39,7 +38,7 @@ Player::Player(const Player& p){
 	num_of_cards=p.num_of_cards;
     cards.insert(cards.begin(), p.cards.begin(), p.cards.end());  
 }
-//Overloading for '=' operator for player type!
+//Overloading for '=' operator for player type
 const Player& Player::operator=(const Player& other){
     name=other.name;			
 	num_of_cards=other.num_of_cards;
@@ -47,17 +46,20 @@ const Player& Player::operator=(const Player& other){
     cards.insert(cards.begin(), other.cards.begin(), other.cards.end());
     return *this;
 }
-//The function prints cards that the player has
-void Player::your_Turn(){
-    cout<<name<<", your turn -"<<endl;
-    cout<<"Your cards:";
+//The function prints cards of the player 
+void Player::your_Turn()const{
+    cout<< name << str3;
     for(int i=0; i!=num_of_cards; ++i)
         cout<<" ("<<i+1<<")"<<cards.at(i);
     cout<<endl;
 }
 //The function return name of player
-string Player::getName(){
+string Player::getName()const{
     return name;
+}
+//The function return size of vector<Card> cards
+int Player::getCards()const{
+    return num_of_cards;
 }
 //The function allows the player to lay out additional cards 
 int Player::taki_card(Card& currentCard){
@@ -181,7 +183,6 @@ bool Player::play(Card& currentCard){
         if (n<=0 || n>num_of_cards){                    //take a card from the deck
             cards.push_back(generate_card());
             num_of_cards++;
-            n=3;
             flag=false;
             _play=false;
         }else{
@@ -209,8 +210,4 @@ bool Player::play(Card& currentCard){
         }
     }
     return _play;
-}
-//The function return size of cards
-int Player::GetCards(){
-    return num_of_cards;
 }
