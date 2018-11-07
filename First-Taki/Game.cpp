@@ -103,7 +103,7 @@ void Game::NoUsePlayStart(){
 }
 //The function use Player::play(Card&)
 void Game::UsePlayStart(){
-    bool flag=true;                 //flag to end the game
+    bool flag=false;                //flag to end the game
     int course=1;                   //direction, 1 - clockwise; -1 - counterclock-wise
     int index=0;                    //index of player
     bool _play=true;
