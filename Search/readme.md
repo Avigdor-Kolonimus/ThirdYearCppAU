@@ -1,4 +1,4 @@
 # Assignment2
-Manage memory allocation and use set for this.
+Search for words in the text.
 
 Alexey
